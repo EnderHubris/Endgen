@@ -17,7 +17,7 @@ void EndgenScene::Render() {
     void* pixels = nullptr;
     int pitch = 0;
 
-    SDL_LockTexture(texture, nullptr, &pixels, &pitch); // SEG FAULT
+    SDL_LockTexture(texture, nullptr, &pixels, &pitch);
 
     Uint32* pixelBuffer = static_cast<Uint32*>(pixels);
     int pitchPixels = pitch / sizeof(Uint32);
