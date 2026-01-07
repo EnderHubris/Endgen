@@ -18,6 +18,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # places to add to search-list for header files
 include_directories(engine/src/hpp)
 include_directories(engine/src/hpp/type)
+include_directories(engine/src/hpp/objects)
 
 # Add the source directory with its own CMakeLists.txt
 add_subdirectory(engine/src)

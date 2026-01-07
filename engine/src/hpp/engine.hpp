@@ -2,6 +2,8 @@
 #define ENDGEN_ENGINE
 
 #include <SDL.h>
+#include <SDL_stdinc.h>
+
 #include <iostream>
 #include <scene.hpp>
 
@@ -18,6 +20,8 @@ class EndgenEngine
         void Run();
         // renders a given scene
         void RenderScene();
+        // listen for player input
+        void GetInput();
 
         int WIDTH;
         int HEIGHT;

@@ -2,13 +2,16 @@
 #define ENDGEN_SCENE
 
 #include <SDL.h>
-#include <SDL_stdinc.h>
+#include <SDL_stdinc.h> // import types: Uint32, Uint8, etc
+
+#include <vector>
 
 // engine types
 #include <vec3.hpp>
 
 // engine components
 #include <camera.hpp>
+#include <basic_objects.hpp>
 
 class EndgenScene
 {
@@ -18,6 +21,14 @@ class EndgenScene
 
         void Render();
 
+        // set starting position of Scene Camera
+        // before Rendering Scene
+        void SetCamera(Vector3 camPos);
+        std::vector<WorldObject>* GetSceneObjects();
+    
+        Vector3 RayFromCamera(int x, int y);
+        Uint32 RaycastScene(const Vector3& rayDir);
+
     private:
         Camera* MainCamera;
 
@@ -26,6 +37,8 @@ class EndgenScene
         
         SDL_Renderer* renderer;
         SDL_Texture* texture;
+
+        std::vector<WorldObject> sceneObjects;
 };
 
 #endif

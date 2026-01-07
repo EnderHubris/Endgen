@@ -7,6 +7,8 @@
 #include <iostream>
 #include <vector>
 
+#define VOID_COLOR 0xFF111417 // 0xARBG (in-hex)
+
 class Camera : public Singleton<Camera>
 {
     // allows singleton template to access private members
@@ -15,7 +17,24 @@ class Camera : public Singleton<Camera>
 
     public:
         Camera();
+        Camera(Vector3 pos);
+
+        void Update();
+
+        float FovRad() const { return fov * M_PI / 180.f; };
+
+        Vector3 ComputeForward() const;
+        Vector3 ComputeRight() const;
+        Vector3 ComputeUp() const;
+
+        float xRot;
+        float yRot;
+        float fov = 75;
+
         Vector3 position;
+        Vector3 forward;
+        Vector3 right;
+        Vector3 up;
 };
 
 #endif

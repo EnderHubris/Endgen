@@ -5,6 +5,19 @@ EndgenEngine::EndgenEngine(int w, int h): WIDTH(w), HEIGHT(h) {
     if (!Init()) return;
 
     scene = new EndgenScene(w, h, renderer, texture);
+    if (scene != nullptr) {
+        scene->SetCamera(Vector3(0,4,0));
+        
+        // populate the World Space with Objects
+        std::vector<WorldObject>* sceneObjs = scene->GetSceneObjects();
+        if (sceneObjs != nullptr) {
+            *sceneObjs = {
+                Ground(25, 25),
+                Cube(5, 5, 5, Vector3(0,4,15), 0xFF0000FF)
+            };
+        }
+    }
+
     Run();
 }
 
@@ -65,10 +78,35 @@ bool EndgenEngine::Init() {
     return true;
 }
 
+void EndgenEngine::GetInput() {
+    const Uint8* keys = SDL_GetKeyboardState(nullptr);
+
+    int sensitivity = 5;
+    float dx = 0.01f;
+    float dy = 0.01f;
+
+    // Look Left and Right
+    if (keys[SDL_SCANCODE_A]) {
+        // A is being held
+        Camera::Instance().yRot += dy * sensitivity;
+    } else if (keys[SDL_SCANCODE_D]) {
+        // D is being held
+        Camera::Instance().yRot -= dy * sensitivity;
+    }
+
+    // Look Up and Down
+    if (keys[SDL_SCANCODE_W]) {
+        // W is being held
+        Camera::Instance().xRot += dx * sensitivity;
+    } else if (keys[SDL_SCANCODE_S]) {
+        // S is being held
+        Camera::Instance().xRot -= dx * sensitivity;
+    }
+}
+
 void EndgenEngine::Run() {
     bool running = true;
     SDL_Event event;
-
     std::cout << "[*] Rendering Scene. . ." << std::endl;
 
     while (running)
@@ -80,9 +118,14 @@ void EndgenEngine::Run() {
             }
         }
 
+        GetInput();
+
+        Camera::Instance().Update();
+
         RenderScene();
 
-        SDL_Delay(16); // ~60 FPS
+        // wait in milliseconds to not over utilize the CPU
+        SDL_Delay(16); // --> 1000 / 16 = 62.5 ~= 62-63 FPS
     }
 }
 
