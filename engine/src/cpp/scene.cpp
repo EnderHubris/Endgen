@@ -16,7 +16,7 @@ void EndgenScene::SetCamera(Vector3 camPos) {
     }
 }
 
-std::vector<WorldObject>* EndgenScene::GetSceneObjects() { return &sceneObjects; };
+std::vector<WorldObject*>* EndgenScene::GetSceneObjects() { return &sceneObjects; };
 
 void EndgenScene::Render() {
     if (renderer == nullptr || texture == nullptr) return;
@@ -92,15 +92,29 @@ Uint32 EndgenScene::RaycastScene(const Vector3& rayDir)
 
     Vector3 hitPos = camPos + rayDir * t;
 
-    // simple checkerboard coloring
-    int checkX = int(floor(hitPos.x)) & 1;
-    int checkY = int(floor(hitPos.y)) & 1;
+    for (WorldObject* obj : sceneObjects) {
+        if (obj != nullptr) {
+            if (obj->ContainsPoint(hitPos)) {
+                return obj->GetColor();
+            }
+        }
+    }
 
-    Uint32 color;
-    if (checkX ^ checkY) color = 0xFFFFFFFF;    // white
-    else color = 0xFF000000;                    // black
+    // // simple checkerboard coloring
+    // int checkX = int(floor(hitPos.x)) & 1;
+    // int checkY = int(floor(hitPos.y)) & 1;
 
-    return color;
+    // Uint32 color;
+    // if (checkX ^ checkY) color = 0xFFFFFFFF;    // white
+    // else color = 0xFF000000;                    // black
+
+    return VOID_COLOR;
 }
 
-EndgenScene::~EndgenScene() {}
+EndgenScene::~EndgenScene() {
+    for (WorldObject* obj : sceneObjects) {
+        if (obj != nullptr) {
+            delete obj;
+        }
+    }
+}

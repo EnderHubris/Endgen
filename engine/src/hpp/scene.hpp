@@ -24,7 +24,7 @@ class EndgenScene
         // set starting position of Scene Camera
         // before Rendering Scene
         void SetCamera(Vector3 camPos);
-        std::vector<WorldObject>* GetSceneObjects();
+        std::vector<WorldObject*>* GetSceneObjects();
     
         Vector3 RayFromCamera(int x, int y);
         Uint32 RaycastScene(const Vector3& rayDir);
@@ -38,7 +38,7 @@ class EndgenScene
         SDL_Renderer* renderer;
         SDL_Texture* texture;
 
-        std::vector<WorldObject> sceneObjects;
+        std::vector<WorldObject*> sceneObjects;
 };
 
 #endif

@@ -1,6 +1,7 @@
 #include <engine.hpp>
+#include <inspector.hpp>
 
-EndgenEngine::EndgenEngine(int w, int h): WIDTH(w), HEIGHT(h) {
+EndgenEngine::EndgenEngine(bool inspectorMode, int w, int h): WIDTH(w), HEIGHT(h) {
     std::cout << "[*] Starting Engine. . ." << std::endl;
     if (!Init()) return;
 
@@ -9,13 +10,18 @@ EndgenEngine::EndgenEngine(int w, int h): WIDTH(w), HEIGHT(h) {
         scene->SetCamera(Vector3(0,4,0));
         
         // populate the World Space with Objects
-        std::vector<WorldObject>* sceneObjs = scene->GetSceneObjects();
+        std::vector<WorldObject*>* sceneObjs = scene->GetSceneObjects();
         if (sceneObjs != nullptr) {
             *sceneObjs = {
-                Ground(25, 25),
-                Cube(5, 5, 5, Vector3(0,4,15), 0xFF0000FF)
+                new Ground(25, 25),
+                new Cube(6, 6, 6, Vector3(0,2,25), 0xFF0000FF)
             };
         }
+    }
+
+    if (inspectorMode) {
+        std::cout << "[*] Starting Inspector. . ." << std::endl;
+        // Inspector inspectorWindow;
     }
 
     Run();
@@ -109,8 +115,7 @@ void EndgenEngine::Run() {
     SDL_Event event;
     std::cout << "[*] Rendering Scene. . ." << std::endl;
 
-    while (running)
-    {
+    while (running) {
         // Handle events
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {

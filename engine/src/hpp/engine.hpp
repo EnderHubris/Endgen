@@ -10,7 +10,7 @@
 class EndgenEngine
 {
     public:
-        EndgenEngine(int w = 800, int h = 600);
+        EndgenEngine(bool inspectorMode = false, int w = 800, int h = 600);
         ~EndgenEngine();
 
     private:
