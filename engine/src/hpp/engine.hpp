@@ -4,8 +4,22 @@
 #include <SDL.h>
 #include <SDL_stdinc.h>
 
+#include <thread>
+
 #include <iostream>
 #include <scene.hpp>
+
+#include <inspector.hpp>
+
+namespace SDL_Helper {
+    SDL_Window* Create_Window(const char* WINDOW_NAME, int x, int y, int width, int height);
+    SDL_Renderer* Create_Renderer(SDL_Window* window, bool useGPU);
+    SDL_Texture* Create_Texture(SDL_Renderer* renderer, int width, int height);
+    TTF_Font* Create_Font(
+        const char* font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        int fontSize = 24
+    );
+};
 
 class EndgenEngine
 {
@@ -26,11 +40,14 @@ class EndgenEngine
         int WIDTH;
         int HEIGHT;
 
-        SDL_Window* window;
-        SDL_Renderer* renderer;
-        SDL_Texture* texture;
+        std::vector<SDL_Window*> windows;
+        std::vector<SDL_Renderer*> renderers;
+        std::vector<SDL_Texture*> textures;
+        TTF_Font* font;
         
         EndgenScene* scene;
+        Inspector* inspector;
+        std::thread tInspector;
 };
 
 #endif

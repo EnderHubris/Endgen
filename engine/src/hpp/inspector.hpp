@@ -8,6 +8,9 @@
 #include <iostream>
 #include <string>
 
+#include <mutex>
+#include <atomic>
+
 namespace Inspector_UI {
     struct Button {
         SDL_Rect rect;
@@ -26,21 +29,35 @@ namespace Inspector_UI {
     );
 };
 
+inline std::atomic_bool engineRunning{true};
+inline std::mutex sceneObjectMutex;
+
 class Inspector {
     public:
-        Inspector(int w = 800, int h = 600);
+        Inspector();
         ~Inspector();
+
+        void SetRenderer(SDL_Renderer* r);
+        void SetWindow(SDL_Window* w);
+        void SetTexture(SDL_Texture* t);
+        void SetFont(TTF_Font* f);
+
+        void StartUp();
+        void CloseInspector();
+        
     private:
-        bool Init();
         void Run();
+
+        bool running;
+        bool closed;
 
         SDL_Window* window;
         SDL_Renderer* renderer;
         SDL_Texture* texture;
         TTF_Font* font;
 
-        int WIDTH;
-        int HEIGHT;
+        // UI Elements
+        Inspector_UI::Button button;
 };
 
 #endif
