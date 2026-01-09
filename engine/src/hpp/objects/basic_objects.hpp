@@ -16,7 +16,7 @@ class WorldObject {
             Uint32 col = GREEN
         ): width(w), length(l), height(h), position(pos), color(col) {}
 
-        Vector3 GetPosition() { return position; }
+        Vector3& GetPosition() { return position; }
 
         int GetWidth() { return width; }
         int GetLength() { return length; }

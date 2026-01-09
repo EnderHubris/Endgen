@@ -5,6 +5,7 @@
 #include <SDL_stdinc.h> // import types: Uint32, Uint8, etc
 
 #include <vector>
+#include <mutex>
 
 // engine types
 #include <vec3.hpp>
@@ -12,6 +13,8 @@
 // engine components
 #include <camera.hpp>
 #include <basic_objects.hpp>
+
+inline std::mutex sceneObjectMutex;
 
 class EndgenScene
 {
@@ -25,6 +28,7 @@ class EndgenScene
         // before Rendering Scene
         void SetCamera(Vector3 camPos);
         std::vector<WorldObject*>* GetSceneObjects();
+        size_t ObjectCount() const;
     
         Vector3 RayFromCamera(int x, int y);
         Uint32 RaycastScene(const Vector3& rayDir);

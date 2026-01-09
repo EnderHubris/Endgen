@@ -18,6 +18,8 @@ void EndgenScene::SetCamera(Vector3 camPos) {
 
 std::vector<WorldObject*>* EndgenScene::GetSceneObjects() { return &sceneObjects; };
 
+size_t EndgenScene::ObjectCount() const { return sceneObjects.size(); }
+
 void EndgenScene::Render() {
     if (renderer == nullptr || texture == nullptr) return;
 
@@ -93,6 +95,7 @@ Uint32 EndgenScene::RaycastScene(const Vector3& rayDir)
     Vector3 hitPos = camPos + rayDir * t;
 
     for (WorldObject* obj : sceneObjects) {
+        std::lock_guard<std::mutex> lock(sceneObjectMutex);
         if (obj != nullptr) {
             if (obj->ContainsPoint(hitPos)) {
                 return obj->GetColor();

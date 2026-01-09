@@ -61,6 +61,8 @@ EndgenEngine::EndgenEngine(bool inspectorMode, int w, int h): WIDTH(w), HEIGHT(h
     }
 
     if (inspector != nullptr) {
+        inspector->SetActiveScene(scene);
+        
         auto inspectorMain = [](Inspector* inspector) {
             if (inspector != nullptr) inspector->StartUp();
         };
@@ -206,21 +208,21 @@ void EndgenEngine::Run() {
     while (running) {
         // Handle events
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_WINDOWEVENT) {
-                Uint32 id = event.window.windowID;
-                bool closeWindow = event.window.event == SDL_WINDOWEVENT_CLOSE;
+            if (event.type == SDL_QUIT) {
+                running = engineRunning = false;
+                break;
+            }
 
-                if (focused && id == SDL_GetWindowID(windows[0])) {
-                    // ENGINE WINDOW
-                    if (closeWindow) {
-                        running = engineRunning = false;
-                    }
-                    
-                    if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
-                        focused = true;
-                    } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
-                        focused = false;
-                    }
+            if (event.type == SDL_WINDOWEVENT) {
+                if (event.window.windowID != SDL_GetWindowID(windows[0]))
+                    continue;
+    
+                if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+                    running = engineRunning = false;
+                } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+                    focused = true;
+                } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+                    focused = false;
                 }
             }
         }
@@ -239,7 +241,6 @@ void EndgenEngine::Run() {
 
 void EndgenEngine::RenderScene() {
     // auto-unlock on end of function
-    std::lock_guard<std::mutex> lock(sceneObjectMutex);
     if (scene != nullptr)
         scene->Render();
 }
