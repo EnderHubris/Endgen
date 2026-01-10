@@ -4,6 +4,9 @@ EndgenScene::EndgenScene(int w, int h, SDL_Renderer* rend, SDL_Texture* text) {
     WIDTH = w;
     HEIGHT = h;
 
+    pixelBuffer.resize(WIDTH * HEIGHT);
+    internalBuffer.resize(WIDTH * HEIGHT);
+
     renderer = rend;
     texture = text;
     
@@ -20,42 +23,37 @@ std::vector<WorldObject*>* EndgenScene::GetSceneObjects() { return &sceneObjects
 
 size_t EndgenScene::ObjectCount() const { return sceneObjects.size(); }
 
+SDL_Renderer* EndgenScene::GetRenderer() { return renderer; }
+SDL_Texture* EndgenScene::GetTexture() { return texture; }
+
+void EndgenScene::StopRenderer() { runRenderer = false; }
+
+std::vector<Uint32>& EndgenScene::GetBuffer() { return pixelBuffer; }
+
 void EndgenScene::Render() {
-    if (renderer == nullptr || texture == nullptr) return;
+    rThread = std::thread([this]() {
+        while (runRenderer) {
+            int pixelsPerRow = WIDTH;
 
-    // pointer to locked pixels
-    void* pixels = nullptr;
-    int bytesPerRow = 0;
-    
-    // Lock texture to write pixels
-    int lockTexture = SDL_LockTexture(texture, nullptr, &pixels, &bytesPerRow);
-    if (lockTexture == 0) {
-        Uint32* pixelBuffer = static_cast<Uint32*>(pixels); // buffer we will draw to
-        int pixelsPerRow = bytesPerRow / sizeof(Uint32);    // roughly evaluates to WIDTH
-        
-        for (int y = 0; y < HEIGHT; ++y) {
-            for (int x = 0; x < WIDTH; ++x) {
-                int row = y * pixelsPerRow;
-                int col = x;
+            for (int y = 0; y < HEIGHT; ++y) {
+                for (int x = 0; x < WIDTH; ++x) {
+                    int row = y * pixelsPerRow;
+                    int col = x;
 
-                Vector3 rayDir = RayFromCamera(x,y);
-                Uint32 color = RaycastScene(rayDir);
-                pixelBuffer[row + col] = color;
+                    Vector3 rayDir = RayFromCamera(x,y);
+                    Uint32 color = RaycastScene(rayDir);
+                    internalBuffer[row + col] = color;
+                }
+            }
 
-                // pixelBuffer[row + col] = VOID_COLOR;
+            // anonymous block for mutex
+            {
+                std::lock_guard<std::mutex> lock(pixelBufferMutex);
+                std::swap(internalBuffer, pixelBuffer);
+                bufferReady.store(true, std::memory_order_release);
             }
         }
-    
-        // unlock texture so it can be used
-        SDL_UnlockTexture(texture);
-    
-        // Render to screen
-        SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, texture, nullptr, nullptr);
-        SDL_RenderPresent(renderer);
-    } else {
-        std::cerr << "[-] Error Locking Texture! [" << lockTexture << "]" << std::endl;
-    }
+    });
 }
 
 Vector3 EndgenScene::RayFromCamera(int x, int y) {
@@ -157,6 +155,10 @@ Uint32 EndgenScene::RaycastScene(const Vector3& rayDir)
 }
 
 EndgenScene::~EndgenScene() {
+    // ensure the render thread closes safely
+    if (rThread.joinable())
+        rThread.join();
+
     for (WorldObject* obj : sceneObjects) {
         if (obj != nullptr) {
             delete obj;

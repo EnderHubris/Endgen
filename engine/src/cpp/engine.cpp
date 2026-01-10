@@ -55,7 +55,11 @@ EndgenEngine::EndgenEngine(bool inspectorMode, int w, int h): WIDTH(w), HEIGHT(h
         if (sceneObjs != nullptr) {
             *sceneObjs = {
                 new Ground(25, 25),
-                new Cube(6, 6, 6, Vector3(0,2,25), 0xFF0000FF)
+                new Cube(6, 6, 6, Vector3(5,2,25), 0xFF0000FF),
+                new Cube(2, 4, 3, Vector3(-7,4,15), 0xFFDFFF52),
+                new Cube(2, 2, 2, Vector3(5,2,30), 0xFFFC0345),
+                new Cube(3, 2, 3, Vector3(-8,6,10), 0xFFFC6B03),
+                new Cube(1, 3, 4, Vector3(-10,5,5), 0xFF03FC98)
             };
         }
     }
@@ -198,12 +202,20 @@ void EndgenEngine::GetInput() {
     }
 }
 
+void EndgenEngine::RenderScene() {
+    if (scene != nullptr)
+        scene->Render();
+}
+
 void EndgenEngine::Run() {
     bool running = true;
     bool focused = true;
     
     SDL_Event event;
     std::cout << "[*] Rendering Scene. . ." << std::endl;
+
+    // create the rendering thread
+    RenderScene();
 
     while (running) {
         // Handle events
@@ -229,20 +241,41 @@ void EndgenEngine::Run() {
 
         GetInput();
 
+        /** @todo Optimize Rendering to stop Frame Tearing from Camera Movement */
         Camera::Instance().Update();
 
-        RenderScene();
+        bool sceneComponentsExist = scene->GetTexture() && scene->GetRenderer();
+        // only write the pixels to the texture when the atomic signal is fired
+        if (scene != nullptr && sceneComponentsExist && bufferReady.load(std::memory_order_acquire)) {
+            std::lock_guard<std::mutex> lock(pixelBufferMutex);
+
+            // pointer to locked pixels
+            void* pixels = nullptr;
+            int bytesPerRow = 0;
+            
+            // Lock texture to write pixels
+            int lockTexture = SDL_LockTexture(scene->GetTexture(), nullptr, &pixels, &bytesPerRow);
+
+            if (lockTexture == 0) {
+                std::memcpy(pixels, scene->GetBuffer().data(), WIDTH * HEIGHT * sizeof(Uint32));
+            }
+
+            // unlock texture so it can be used
+            SDL_UnlockTexture(scene->GetTexture());
+            
+            // Render to screen
+            SDL_RenderClear(scene->GetRenderer());
+            SDL_RenderCopy(scene->GetRenderer(), scene->GetTexture(), nullptr, nullptr);
+            SDL_RenderPresent(scene->GetRenderer());
+
+            bufferReady.store(false, std::memory_order_release);
+        }
 
         // wait in milliseconds to not over utilize the CPU
         SDL_Delay(16); // --> 1000 / 16 = 62.5 ~= 62-63 FPS
     }
     std::cout << "[*] Rendering Loop Closing. . ." << std::endl;
-}
-
-void EndgenEngine::RenderScene() {
-    // auto-unlock on end of function
-    if (scene != nullptr)
-        scene->Render();
+    runRenderer = false;
 }
 
 EndgenEngine::~EndgenEngine() {
