@@ -80,36 +80,78 @@ Vector3 EndgenScene::RayFromCamera(int x, int y) {
     return rayDir.Normalize();
 }
 
+bool RenderMath::RayIntersectsAABB(
+    const Vector3& origin,
+    const Vector3& dir,
+    const Vector3& min,
+    const Vector3& max,
+    float& tOut
+) {
+    float tmin = 0.0f;
+    float tmax = 1e30f;
+
+    // iterate over all components of a vector3
+    for (int i = 0; i < 3; ++i) {
+        float o = origin[i];
+        float d = dir[i];
+
+        if (std::abs(d) < 1e-6f) {
+            if (o < min[i] || o > max[i])
+                return false;
+        } else {
+            float invD = 1.0f / d;
+            float t1 = (min[i] - o) * invD;
+            float t2 = (max[i] - o) * invD;
+
+            if (t1 > t2) std::swap(t1, t2);
+
+            tmin = std::max(tmin, t1);
+            tmax = std::min(tmax, t2);
+
+            if (tmin > tmax)
+                return false;
+        }
+    }
+
+    tOut = tmin;
+    return true;
+}
+
 Uint32 EndgenScene::RaycastScene(const Vector3& rayDir)
 {
     if (MainCamera == nullptr) return -1;
 
     Vector3& camPos = MainCamera->position;
 
-    // simple plane at z = 0
-    float t = -camPos.y / rayDir.y;  // intersection t along ray
-    if (t <= 0.f) {
-        return VOID_COLOR; // background
-    }
+    float closestT = 1e30f;
+    WorldObject* closestObj = nullptr;
 
-    Vector3 hitPos = camPos + rayDir * t;
-
-    for (WorldObject* obj : sceneObjects) {
+    // anonymous block for mutex
+    {
         std::lock_guard<std::mutex> lock(sceneObjectMutex);
-        if (obj != nullptr) {
-            if (obj->ContainsPoint(hitPos)) {
-                return obj->GetColor();
+
+        for (WorldObject* obj : sceneObjects) {
+            if (!obj) continue;
+
+            float t;
+            // object with smallest t value is closet object
+            if (RenderMath::RayIntersectsAABB(
+                    camPos,
+                    rayDir,
+                    obj->Min(),
+                    obj->Max(),
+                    t
+                )) {
+                if (t > 0.0f && t < closestT) {
+                    closestT = t;
+                    closestObj = obj;
+                }
             }
         }
     }
 
-    // // simple checkerboard coloring
-    // int checkX = int(floor(hitPos.x)) & 1;
-    // int checkY = int(floor(hitPos.y)) & 1;
-
-    // Uint32 color;
-    // if (checkX ^ checkY) color = 0xFFFFFFFF;    // white
-    // else color = 0xFF000000;                    // black
+    if (closestObj)
+        return closestObj->GetColor();
 
     return VOID_COLOR;
 }

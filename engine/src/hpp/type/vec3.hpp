@@ -2,12 +2,26 @@
 #define ENDGEN_VEC3
 
 #include <cmath>
+#include <stdexcept>
 
 class Vector3
 {
     public:
         constexpr Vector3(): x(0), y(0), z(0) {}
         constexpr Vector3(float x_, float y_, float z_): x(x_), y(y_), z(z_) {}
+
+        float& operator[](int i) {
+            if (i == 0) return x;
+            if (i == 1) return y;
+            if (i == 2) return z;
+            throw std::out_of_range("Vector3 index out of range");
+        }
+        const float& operator[](int i) const {
+            if (i == 0) return x;
+            if (i == 1) return y;
+            if (i == 2) return z;
+            throw std::out_of_range("Vector3 index out of range");
+        }
 
         bool operator==(const Vector3& rhs) const {
             return x == rhs.x && y == rhs.y && z == rhs.z;

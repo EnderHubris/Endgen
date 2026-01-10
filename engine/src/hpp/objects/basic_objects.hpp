@@ -24,6 +24,24 @@ class WorldObject {
 
         int GetColor() { return color; }
 
+        // used for AABB detection
+        Vector3 Min() const {
+            return {
+                position.x - width  * 0.5f,
+                position.y - height * 0.5f,
+                position.z - length * 0.5f
+            };
+        }
+        
+        // used for AABB detection
+        Vector3 Max() const {
+            return {
+                position.x + width  * 0.5f,
+                position.y + height * 0.5f,
+                position.z + length * 0.5f
+            };
+        }
+
         virtual bool ContainsPoint(const Vector3& point) = 0;
         
         protected:

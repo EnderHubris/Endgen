@@ -16,6 +16,16 @@
 
 inline std::mutex sceneObjectMutex;
 
+namespace RenderMath {
+    bool RayIntersectsAABB(
+        const Vector3& origin,
+        const Vector3& dir,
+        const Vector3& min,
+        const Vector3& max,
+        float& tOut
+    );
+};
+
 class EndgenScene
 {
     public:
