@@ -23,3 +23,8 @@ cmake ../ && make endgen
 # to modify scene objects at runtime
 ./bin/endgen inspect
 ```
+
+### Visuals
+The inspector mode generates a row of position (x,y,z) modifiers where the user can change the position during run-time:
+<img width="422" height="329" alt="colorful cubes" src="https://github.com/user-attachments/assets/1da01c82-a777-4459-9742-2cefc52ab39a" />
+<img width="854" height="346" alt="inspector mode" src="https://github.com/user-attachments/assets/aea16f55-fb57-42c4-a4cb-24971076fac7" />
