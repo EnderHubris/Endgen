@@ -6,9 +6,6 @@
 
 #include <vector>
 #include <cstring>
-#include <thread>
-#include <atomic>
-#include <mutex>
 
 // engine types
 #include <vec3.hpp>
@@ -16,12 +13,6 @@
 // engine components
 #include <camera.hpp>
 #include <basic_objects.hpp>
-
-inline std::mutex sceneObjectMutex;
-inline std::atomic_bool runRenderer{true};
-
-inline std::mutex pixelBufferMutex;
-inline std::atomic_bool bufferReady{false};
 
 namespace RenderMath {
     bool RayIntersectsAABB(
@@ -33,8 +24,7 @@ namespace RenderMath {
     );
 };
 
-class EndgenScene
-{
+class EndgenScene {
     public:
         EndgenScene(int w, int h, SDL_Renderer* rend, SDL_Texture* text);
         ~EndgenScene();
@@ -44,7 +34,6 @@ class EndgenScene
         // set starting position of Scene Camera
         // before Rendering Scene
         void SetCamera(Vector3 camPos);
-        void StopRenderer();
         std::vector<WorldObject*>* GetSceneObjects();
         size_t ObjectCount() const;
     
@@ -68,9 +57,6 @@ class EndgenScene
         std::vector<WorldObject*> sceneObjects;
         
         std::vector<Uint32> pixelBuffer;    // buffer is used for drawing to the texture
-        std::vector<Uint32> internalBuffer; // buffer is the destination of render computations
-
-        std::thread rThread;
 };
 
 #endif

@@ -66,6 +66,8 @@ Vector3 RotateAroundAxis(const Vector3& v, const Vector3& axis, float angle) {
     return v * cosA + Cross(axis, v) * sinA + axis * Dot(axis, v) * (1 - cosA);
 }
 
+// Applies rotation to the camera based on xRot, yRot values
+// updating local vectors: fwd, right, and up
 void Camera::Update() {
     // lock rotation angles between 0-360 degrees
     xRot = std::fmod(xRot, 360.f);

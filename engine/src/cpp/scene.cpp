@@ -5,7 +5,6 @@ EndgenScene::EndgenScene(int w, int h, SDL_Renderer* rend, SDL_Texture* text) {
     HEIGHT = h;
 
     pixelBuffer.resize(WIDTH * HEIGHT);
-    internalBuffer.resize(WIDTH * HEIGHT);
 
     renderer = rend;
     texture = text;
@@ -26,34 +25,21 @@ size_t EndgenScene::ObjectCount() const { return sceneObjects.size(); }
 SDL_Renderer* EndgenScene::GetRenderer() { return renderer; }
 SDL_Texture* EndgenScene::GetTexture() { return texture; }
 
-void EndgenScene::StopRenderer() { runRenderer = false; }
-
 std::vector<Uint32>& EndgenScene::GetBuffer() { return pixelBuffer; }
 
 void EndgenScene::Render() {
-    rThread = std::thread([this]() {
-        while (runRenderer) {
-            int pixelsPerRow = WIDTH;
+    int pixelsPerRow = WIDTH;
 
-            for (int y = 0; y < HEIGHT; ++y) {
-                for (int x = 0; x < WIDTH; ++x) {
-                    int row = y * pixelsPerRow;
-                    int col = x;
+    for (int y = 0; y < HEIGHT; ++y) {
+        for (int x = 0; x < WIDTH; ++x) {
+            int row = y * pixelsPerRow;
+            int col = x;
 
-                    Vector3 rayDir = RayFromCamera(x,y);
-                    Uint32 color = RaycastScene(rayDir);
-                    internalBuffer[row + col] = color;
-                }
-            }
-
-            // anonymous block for mutex
-            {
-                std::lock_guard<std::mutex> lock(pixelBufferMutex);
-                std::swap(internalBuffer, pixelBuffer);
-                bufferReady.store(true, std::memory_order_release);
-            }
+            Vector3 rayDir = RayFromCamera(x,y);
+            Uint32 color = RaycastScene(rayDir);
+            pixelBuffer[row + col] = color;
         }
-    });
+    }
 }
 
 Vector3 EndgenScene::RayFromCamera(int x, int y) {
@@ -124,26 +110,21 @@ Uint32 EndgenScene::RaycastScene(const Vector3& rayDir)
     float closestT = 1e30f;
     WorldObject* closestObj = nullptr;
 
-    // anonymous block for mutex
-    {
-        std::lock_guard<std::mutex> lock(sceneObjectMutex);
+    for (WorldObject* obj : sceneObjects) {
+        if (!obj) continue;
 
-        for (WorldObject* obj : sceneObjects) {
-            if (!obj) continue;
-
-            float t;
-            // object with smallest t value is closet object
-            if (RenderMath::RayIntersectsAABB(
-                    camPos,
-                    rayDir,
-                    obj->Min(),
-                    obj->Max(),
-                    t
-                )) {
-                if (t > 0.0f && t < closestT) {
-                    closestT = t;
-                    closestObj = obj;
-                }
+        float t;
+        // object with smallest t value is closet object
+        if (RenderMath::RayIntersectsAABB(
+                camPos,
+                rayDir,
+                obj->Min(),
+                obj->Max(),
+                t
+            )) {
+            if (t > 0.0f && t < closestT) {
+                closestT = t;
+                closestObj = obj;
             }
         }
     }
@@ -155,10 +136,6 @@ Uint32 EndgenScene::RaycastScene(const Vector3& rayDir)
 }
 
 EndgenScene::~EndgenScene() {
-    // ensure the render thread closes safely
-    if (rThread.joinable())
-        rThread.join();
-
     for (WorldObject* obj : sceneObjects) {
         if (obj != nullptr) {
             delete obj;

@@ -2,14 +2,11 @@
 #define ENDGEN_ENGINE
 
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include <SDL_stdinc.h>
-
-#include <thread>
 
 #include <iostream>
 #include <scene.hpp>
-
-#include <inspector.hpp>
 
 namespace SDL_Helper {
     SDL_Window* Create_Window(const char* WINDOW_NAME, int x, int y, int width, int height);
@@ -24,7 +21,7 @@ namespace SDL_Helper {
 class EndgenEngine
 {
     public:
-        EndgenEngine(bool inspectorMode = false, int w = 800, int h = 600);
+        EndgenEngine(int w = 800, int h = 600);
         ~EndgenEngine();
 
     private:
@@ -40,14 +37,12 @@ class EndgenEngine
         int WIDTH;
         int HEIGHT;
 
-        std::vector<SDL_Window*> windows;
-        std::vector<SDL_Renderer*> renderers;
-        std::vector<SDL_Texture*> textures;
-        TTF_Font* font;
+        SDL_Window*     window;
+        SDL_Renderer*   renderer;
+        SDL_Texture*    texture;
+        TTF_Font*       font;
         
-        EndgenScene* scene;
-        Inspector* inspector;
-        std::thread tInspector;
+        EndgenScene*    scene;
 };
 
 #endif
