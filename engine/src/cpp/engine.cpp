@@ -44,19 +44,6 @@ EndgenEngine::EndgenEngine(int w, int h): WIDTH(w), HEIGHT(h) {
     scene = new EndgenScene(w, h, renderer, texture);
     if (scene != nullptr) {
         scene->SetCamera(Vector3(0,4,0));
-        
-        // populate the World Space with Objects
-        std::vector<WorldObject*>* sceneObjs = scene->GetSceneObjects();
-        if (sceneObjs != nullptr) {
-            *sceneObjs = {
-                new Ground(25, 25),
-                /* new Cube(6, 6, 6, Vector3(5,2,25), 0xFF0000FF),
-                new Cube(2, 4, 3, Vector3(-7,4,15), 0xFFDFFF52),
-                new Cube(2, 2, 2, Vector3(5,2,30), 0xFFFC0345),
-                new Cube(3, 2, 3, Vector3(-8,6,10), 0xFFFC6B03), */
-                new Cube(1, 3, 4, Vector3(-10,5,5), 0xFF03FC98)
-            };
-        }
     }
 
     Run();

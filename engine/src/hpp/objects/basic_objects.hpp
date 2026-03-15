@@ -2,82 +2,63 @@
 #define ENDGEN_BASIC_OBJECTS
 
 #include <cmath>
-#include <vec3.hpp>
+#include <ctime>
+#include <cstdlib>
+
+#include <vec.hpp>
 #include <SDL_stdinc.h>
 
-#define GREEN 0xFF00FF00
+#define GREEN          0xFF00FF00
+#define SKY_BLUE       0xFF3A7BD5
+#define CRIMSON_RED    0xFFE94F37
+#define EMERALD_GREEN  0xFF2ECC71
+#define ROYAL_PURPLE   0xFF9B59B6
+#define SUNFLOWER      0xFFF1C40F
+#define TEAL_OCEAN     0xFF16A085
+#define TANGERINE      0xFFE67E22
+#define SLATE_BLUE     0xFF34495E
+#define PINK_ROSE      0xFFFF6F91
+#define AQUA_MINT      0xFF00C9A7
 
-class WorldObject {
+namespace ColorUtil {
+    /**
+     * Generates a random 0xARGB color value
+     */
+    inline Uint32 RandomColor() {
+        Uint8 r = rand() % 256;
+        Uint8 g = rand() % 256;
+        Uint8 b = rand() % 256;
+
+        return (0xFF << 24) | (r << 16) | (g << 8) | b;
+    }
+};
+
+class Triangle {
     public:
-        WorldObject(): width(0), length(0), height(0), position(v3_zero), color(GREEN) {}
-        WorldObject(
-            int w, int l, int h,
-            Vector3 pos = v3_zero,
-            Uint32 col = GREEN
-        ): width(w), length(l), height(h), position(pos), color(col) {}
-
-        Vector3& GetPosition() { return position; }
-
-        int GetWidth() { return width; }
-        int GetLength() { return length; }
-        int GetHeight() { return height; }
-
-        int GetColor() { return color; }
-
-        // used for AABB detection
-        Vector3 Min() const {
-            return {
-                position.x - width  * 0.5f,
-                position.y - height * 0.5f,
-                position.z - length * 0.5f
-            };
-        }
-        
-        // used for AABB detection
-        Vector3 Max() const {
-            return {
-                position.x + width  * 0.5f,
-                position.y + height * 0.5f,
-                position.z + length * 0.5f
-            };
+        Triangle(Vector2 v1, Vector2 v2, Vector2 v3): color(ColorUtil::RandomColor()) {
+            vertices[0] = v1;
+            vertices[1] = v2;
+            vertices[2] = v3;
         }
 
-        virtual bool ContainsPoint(const Vector3& point) = 0;
-        
-        protected:
-        Vector3 position;
-        int width;  // length across x-axis
-        int length; // length across z-axis
-        int height; // length across y-axis
+        bool ContainsPoint(int x, int y) {
+            for (int i = 0; i < 3; ++i) {
+                int k = (i + 1) % 3;
+
+                Vector2 edge = vertices[k] - vertices[i];               // triangle edge
+                Vector2 normal = VecMath::Perpendicular(edge) * -1;     // negate to get clock-wise perpendicular
+                Vector2 toPoint = Vector2{x,y} - vertices[i];
+
+                float dot = VecMath::Dot(normal, toPoint);
+                if (dot < 0) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        Vector2 vertices[3];
         Uint32 color;
-};
-
-class Ground : public WorldObject {
-    public:
-        Ground(): WorldObject() {}
-        Ground(int w, int l, Vector3 pos = v3_zero, Uint32 col = GREEN): WorldObject(w, l, 0, pos, col) {}
-        bool ContainsPoint(const Vector3& point) override {
-            bool withinWidth = std::abs(position.x - point.x) <= width * 0.5f;
-            bool withinLength = std::abs(position.z - point.z) <= length * 0.5f;
-            return withinLength && withinWidth;
-        }
-};
-
-class Cube : public WorldObject {
-    public:
-        Cube(): WorldObject() {}
-        Cube(int w, int l, int h, Vector3 pos = v3_zero, Uint32 col = GREEN): WorldObject(w, l, h, pos, col) {}
-        bool ContainsPoint(const Vector3& point) override {
-            float halfW = width  * 0.5f;
-            float halfH = height * 0.5f;
-            float halfL = length * 0.5f;
-
-            bool withinWidth  = std::abs(point.x - position.x) <= halfW;
-            bool withinHeight = std::abs(point.y - position.y) <= halfH;
-            bool withinLength = std::abs(point.z - position.z) <= halfL;
-
-            return withinWidth && withinHeight && withinLength;
-        }
 };
 
 #endif

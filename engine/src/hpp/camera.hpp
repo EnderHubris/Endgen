@@ -2,7 +2,7 @@
 #define MAIN_CAMERA
 
 #include <collections.hpp>
-#include <vec3.hpp>
+#include <vec.hpp>
 
 #include <iostream>
 #include <vector>

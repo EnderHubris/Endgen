@@ -10,6 +10,26 @@ EndgenScene::EndgenScene(int w, int h, SDL_Renderer* rend, SDL_Texture* text) {
     texture = text;
     
     MainCamera = &Camera::Instance();
+
+    // populate scene
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+
+    const int numTriangles = 5;
+    const float minX = 50.f, maxX = 600.f;
+    const float minY = 50.f, maxY = 600.f;
+
+    for (int i = 0; i < numTriangles; ++i) {
+        Vector2 v0{ minX + static_cast<float>(std::rand()) / RAND_MAX * (maxX - minX),
+                    minY + static_cast<float>(std::rand()) / RAND_MAX * (maxY - minY) };
+
+        Vector2 v1{ minX + static_cast<float>(std::rand()) / RAND_MAX * (maxX - minX),
+                    minY + static_cast<float>(std::rand()) / RAND_MAX * (maxY - minY) };
+
+        Vector2 v2{ minX + static_cast<float>(std::rand()) / RAND_MAX * (maxX - minX),
+                    minY + static_cast<float>(std::rand()) / RAND_MAX * (maxY - minY) };
+
+        sceneObjects.emplace_back(v0, v1, v2);
+    }
 }
 
 void EndgenScene::SetCamera(Vector3 camPos) {
@@ -17,10 +37,6 @@ void EndgenScene::SetCamera(Vector3 camPos) {
         MainCamera->position = camPos;
     }
 }
-
-std::vector<WorldObject*>* EndgenScene::GetSceneObjects() { return &sceneObjects; };
-
-size_t EndgenScene::ObjectCount() const { return sceneObjects.size(); }
 
 SDL_Renderer* EndgenScene::GetRenderer() { return renderer; }
 SDL_Texture* EndgenScene::GetTexture() { return texture; }
@@ -30,115 +46,32 @@ std::vector<Uint32>& EndgenScene::GetBuffer() { return pixelBuffer; }
 void EndgenScene::Render() {
     int pixelsPerRow = WIDTH;
 
+    // fill the background
     for (int y = 0; y < HEIGHT; ++y) {
         for (int x = 0; x < WIDTH; ++x) {
             int row = y * pixelsPerRow;
             int col = x;
 
-            Vector3 rayDir = RayFromCamera(x,y);
-            Uint32 color = RaycastScene(rayDir);
-            pixelBuffer[row + col] = color;
+            pixelBuffer[row + col] = VOID_COLOR;
         }
     }
-}
 
-Vector3 EndgenScene::RayFromCamera(int x, int y) {
-    if (MainCamera == nullptr) return v3_zero;
+    // minimuze how many pixels we are iterating over
+    for (Triangle& tri : sceneObjects) {
+        // compute bounding box
+        int minX = std::max( 0.f,                   std::min({ tri.vertices[0].x, tri.vertices[1].x, tri.vertices[2].x }));
+        int minY = std::max( 0.f,                   std::min({ tri.vertices[0].y, tri.vertices[1].y, tri.vertices[2].y }));
+        int maxX = std::min( (float)(WIDTH-1),      std::max({ tri.vertices[0].x, tri.vertices[1].x, tri.vertices[2].x }));
+        int maxY = std::min( (float)(HEIGHT-1),     std::max({ tri.vertices[0].y, tri.vertices[1].y, tri.vertices[2].y }));
     
-    // normalize coords
-    float ndcX = (x + 0.5f) / float(WIDTH);
-    float ndcY = (y + 0.5f) / float(HEIGHT);
-
-    // screen-space coords
-    float screenX = (2.f * ndcX - 1.f);
-    float screenY = (1.f - 2.f * ndcY);
-
-    float aspectRatio = float(WIDTH) / float(HEIGHT);
-    float scale = tan(MainCamera->FovRad() / 2.f);
-
-    // ray in world-space
-    Vector3 rayDir = MainCamera->forward
-                   + MainCamera->right * (screenX * aspectRatio * scale)
-                   + MainCamera->up * (screenY * scale);
-
-    return rayDir.Normalize();
-}
-
-bool RenderMath::RayIntersectsAABB(
-    const Vector3& origin,
-    const Vector3& dir,
-    const Vector3& min,
-    const Vector3& max,
-    float& tOut
-) {
-    float tmin = 0.0f;
-    float tmax = 1e30f;
-
-    // iterate over all components of a vector3
-    for (int i = 0; i < 3; ++i) {
-        float o = origin[i];
-        float d = dir[i];
-
-        if (std::abs(d) < 1e-6f) {
-            if (o < min[i] || o > max[i])
-                return false;
-        } else {
-            float invD = 1.0f / d;
-            float t1 = (min[i] - o) * invD;
-            float t2 = (max[i] - o) * invD;
-
-            if (t1 > t2) std::swap(t1, t2);
-
-            tmin = std::max(tmin, t1);
-            tmax = std::min(tmax, t2);
-
-            if (tmin > tmax)
-                return false;
-        }
-    }
-
-    tOut = tmin;
-    return true;
-}
-
-Uint32 EndgenScene::RaycastScene(const Vector3& rayDir)
-{
-    if (MainCamera == nullptr) return -1;
-
-    Vector3& camPos = MainCamera->position;
-
-    float closestT = 1e30f;
-    WorldObject* closestObj = nullptr;
-
-    for (WorldObject* obj : sceneObjects) {
-        if (!obj) continue;
-
-        float t;
-        // object with smallest t value is closet object
-        if (RenderMath::RayIntersectsAABB(
-                camPos,
-                rayDir,
-                obj->Min(),
-                obj->Max(),
-                t
-            )) {
-            if (t > 0.0f && t < closestT) {
-                closestT = t;
-                closestObj = obj;
+        for (int y = minY; y <= maxY; ++y) {
+            for (int x = minX; x <= maxX; ++x) {
+                if (tri.ContainsPoint(x, y)) {
+                    pixelBuffer[y * pixelsPerRow + x] = tri.color;
+                }
             }
         }
     }
-
-    if (closestObj)
-        return closestObj->GetColor();
-
-    return VOID_COLOR;
 }
 
-EndgenScene::~EndgenScene() {
-    for (WorldObject* obj : sceneObjects) {
-        if (obj != nullptr) {
-            delete obj;
-        }
-    }
-}
+EndgenScene::~EndgenScene() {}
