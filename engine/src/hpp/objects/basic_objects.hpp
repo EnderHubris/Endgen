@@ -1,6 +1,9 @@
 #ifndef ENDGEN_BASIC_OBJECTS
 #define ENDGEN_BASIC_OBJECTS
 
+// do not include multiple times
+#pragma once
+
 #include <cmath>
 #include <ctime>
 #include <cstdlib>

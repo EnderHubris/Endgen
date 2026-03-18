@@ -40,7 +40,7 @@ class EndgenScene {
         SDL_Renderer* renderer;
         SDL_Texture* texture;
 
-        std::vector<Triangle> sceneObjects;
+        std::vector<Triangle> triangles;
         
         // buffer is used for drawing to the texture
         std::vector<Uint32> pixelBuffer;

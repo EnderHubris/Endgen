@@ -18,18 +18,18 @@ EndgenScene::EndgenScene(int w, int h, SDL_Renderer* rend, SDL_Texture* text) {
     const float minX = 50.f, maxX = 600.f;
     const float minY = 50.f, maxY = 600.f;
 
-    for (int i = 0; i < numTriangles; ++i) {
-        Vector2 v0{ minX + static_cast<float>(std::rand()) / RAND_MAX * (maxX - minX),
-                    minY + static_cast<float>(std::rand()) / RAND_MAX * (maxY - minY) };
+    // for (int i = 0; i < numTriangles; ++i) {
+    //     Vector2 v0{ minX + static_cast<float>(std::rand()) / RAND_MAX * (maxX - minX),
+    //                 minY + static_cast<float>(std::rand()) / RAND_MAX * (maxY - minY) };
 
-        Vector2 v1{ minX + static_cast<float>(std::rand()) / RAND_MAX * (maxX - minX),
-                    minY + static_cast<float>(std::rand()) / RAND_MAX * (maxY - minY) };
+    //     Vector2 v1{ minX + static_cast<float>(std::rand()) / RAND_MAX * (maxX - minX),
+    //                 minY + static_cast<float>(std::rand()) / RAND_MAX * (maxY - minY) };
 
-        Vector2 v2{ minX + static_cast<float>(std::rand()) / RAND_MAX * (maxX - minX),
-                    minY + static_cast<float>(std::rand()) / RAND_MAX * (maxY - minY) };
+    //     Vector2 v2{ minX + static_cast<float>(std::rand()) / RAND_MAX * (maxX - minX),
+    //                 minY + static_cast<float>(std::rand()) / RAND_MAX * (maxY - minY) };
 
-        sceneObjects.emplace_back(v0, v1, v2);
-    }
+    //     triangles.emplace_back(v0, v1, v2);
+    // }
 }
 
 void EndgenScene::SetCamera(Vector3 camPos) {
@@ -57,7 +57,7 @@ void EndgenScene::Render() {
     }
 
     // minimuze how many pixels we are iterating over
-    for (Triangle& tri : sceneObjects) {
+    for (Triangle& tri : triangles) {
         // compute bounding box
         int minX = std::max( 0.f,                   std::min({ tri.vertices[0].x, tri.vertices[1].x, tri.vertices[2].x }));
         int minY = std::max( 0.f,                   std::min({ tri.vertices[0].y, tri.vertices[1].y, tri.vertices[2].y }));
