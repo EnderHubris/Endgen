@@ -124,10 +124,15 @@ class Vector3 {
             return std::sqrt(x*x + y*y + z*z);
         }
 
-        Vector3 Normalize() const {
+        // return the vector in normalized form
+        Vector3 Normalized() const {
             float len = Length();
             if (len == 0.f) return Vector3(0,0,0); // avoid division by zero
             return Vector3(x / len, y / len, z / len);
+        }
+
+        Vector2 ToVector2() const {
+            return Vector2(x,y);
         }
 
         // predefined
@@ -161,11 +166,33 @@ class Vector3 {
 #define v3_up       Vector3::Up()
 
 namespace VecMath {
+    inline Vector2 Normalize(Vector2 v) {
+        return v / v.Length();
+    }
+    inline Vector3 Normalize(Vector3 v) {
+        return v / v.Length();
+    }
+
+    inline int Dot(Vector2 a, Vector2 b) {
+        return (a.x * b.x) + (a.y * b.y);
+    }
     inline int Dot(Vector3 a, Vector3 b) {
         return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
     }
+
     inline Vector2 Perpendicular(const Vector2& v) {
         return {-v.y, v.x};
+    }
+
+    inline Vector3 Cross(const Vector3& a, const Vector3& b) {
+        return {
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x
+        };
+    }
+    inline Vector3 Perpendicular(const Vector3& v) {
+        return VecMath::Normalize(VecMath::Cross(v, Vector3{-v.y, v.x, v.z}));
     }
 };
 

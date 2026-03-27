@@ -21,7 +21,7 @@ namespace SDL_Helper {
 class EndgenEngine
 {
     public:
-        EndgenEngine(int w = 800, int h = 600);
+        EndgenEngine(int argc, char** argv, int w = 800, int h = 600);
         ~EndgenEngine();
 
     private:
@@ -43,6 +43,9 @@ class EndgenEngine
         TTF_Font*       font;
         
         EndgenScene*    scene;
+
+        bool debug = false;
+        bool exoticTriangles = false;
 };
 
 #endif

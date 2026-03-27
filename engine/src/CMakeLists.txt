@@ -4,6 +4,9 @@ file(GLOB SRC
     cpp/objects/*.cpp
 )
 
+# move obj files where the build can freely access
+file(COPY ${CMAKE_SOURCE_DIR}/engine/objects DESTINATION ${CMAKE_BINARY_DIR})
+
 add_executable(endgen ${SRC})
 
 # manually feed the paths

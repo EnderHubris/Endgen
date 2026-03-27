@@ -10,24 +10,6 @@
 #include <basic_objects.hpp>
 
 namespace ObjFileUtils {
-    inline std::string getLine(std::ifstream& f) {
-        std::string line;
-
-        char c;
-        while (c != EOF) {
-            f.get(c);
-
-            if (c == '\n') {
-                return line;
-            } else {
-                line += c;
-            }
-        }
-        f.close();
-
-        return line;
-    }
-
     inline std::vector<std::string> split(const std::string& s, char c = ' ') {
         std::vector<std::string> splitStr;
         std::string partialStr;
@@ -60,19 +42,71 @@ struct Face {
 };
 
 class Mesh {
+    private:
+        void createTriangles() {
+            for (size_t i = 0; i < faces.back().i_vert.size(); i += 3) {
+                // faces.back().i_vert tells us the index we need
+                // to fetch from this.vertices to form the triangle
+                Vector3 v1 = vertices.at(faces.back().i_vert.at(i));
+                Vector3 v2,v3;
+
+                if (i >= 3) {
+                    // reuse previous indices to form a triangle-fan face
+                    v2 = vertices.at(faces.back().i_vert.at(i-1));
+                    v3 = vertices.at(faces.back().i_vert.at(i-2));
+                } else {
+                    v2 = vertices.at(faces.back().i_vert.at(i+1));
+                    v3 = vertices.at(faces.back().i_vert.at(i+2));
+                }
+
+                triangles.emplace_back(v1, v2, v3);
+            }
+        }
+        void createFace(std::vector<std::string>& faceData) {
+            // faceData => { "1/1/1", "2/2/1", "4/3/1", "3/4/1" }
+            faceData.erase(faceData.begin());
+            if (faceData.empty()) return;
+
+            Face nFace;
+            for (std::string faceEntry : faceData) {
+                std::vector<std::string> faceMetaData = ObjFileUtils::split(faceEntry,'/');
+                if (faceMetaData.empty()) continue;
+
+                // insert i_vert (vertex index)
+                
+                // need to subtract 1 from the index so it fits within
+                // array bounds
+                nFace.i_vert.push_back(std::stoi(faceMetaData.at(0)) - 1);
+
+                // insert t_vert (texture vert)
+                nFace.t_vert.push_back(std::stoi(faceMetaData.at(1)) - 1);
+
+                // insert n_vert (normal vert)
+                nFace.t_vert.push_back(std::stoi(faceMetaData.at(2)) - 1);
+
+            }
+
+            if (!nFace.i_vert.empty()) {
+                faces.push_back(nFace);
+                createTriangles();
+            }
+        }
     public:
         Mesh(const char* objFilePath) {
             std::ifstream objFile(objFilePath);
             if (!objFile.is_open()) {
                 std::cerr << "[-] Error opening: " << objFilePath << "\n";
                 return;
+            } else {
+                std::cout << "[+] Parsing: " << objFilePath << "\n";
             }
 
             // parse .obj file contents
-            while (objFile.is_open()) {
-                std::string line = ObjFileUtils::getLine(objFile);
+            std::string line;
+            while (getline(objFile, line)) {
                 std::vector<std::string> sections = ObjFileUtils::split(line);
-
+                if (sections.empty()) continue;
+                
                 if (sections.at(0) == D_VERTEX) {
                     vertices.push_back({
                         std::stof(sections.at(1)),
@@ -80,30 +114,13 @@ class Mesh {
                         std::stof(sections.at(3))
                     });
                 } else if (sections.at(0) == D_FACE) {
-                    // sections => { "1/1/1", "2/2/1", "4/3/1", "3/4/1" }
-                    for (size_t i = 1; sections.size(); ++i) {
-                        std::vector<std::string> faceMetaData = ObjFileUtils::split(sections.at(i),'/');
-                        Face nFace;
-
-                        // insert i_vert
-                        nFace.i_vert.push_back(std::stoi(faceMetaData.at(0)));
-
-                        // insert t_vert
-                        nFace.t_vert.push_back(std::stoi(faceMetaData.at(1)));
-
-                        // insert n_vert
-                        nFace.t_vert.push_back(std::stoi(faceMetaData.at(2)));
-
-                        faces.push_back(nFace);
-                    }
+                    createFace(sections);
                 }
             }
-        }
-
-        /**
-         * Generates the triangles in the form of a triangle-fan
-         */
-        void drawConvex() {
+            objFile.close();
+            std::cout << " |__ object data created!\n";
+            std::cout << " |__ number of faces: " << faces.size() << "\n";
+            std::cout << " |__ number of triangles: " << triangles.size() << "\n";
         }
 
         std::vector<Vector3>    vertices;

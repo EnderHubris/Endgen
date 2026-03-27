@@ -77,13 +77,13 @@ void Camera::Update() {
     Vector3 fwd = v3_fwd;
 
     // yaw
-    fwd = RotateAroundAxis(fwd, v3_up, yRot).Normalize();
+    fwd = RotateAroundAxis(fwd, v3_up, yRot).Normalized();
 
     // right axis
-    right = Cross(fwd, v3_up).Normalize();
+    right = Cross(fwd, v3_up).Normalized();
 
     // pitch
-    forward = RotateAroundAxis(fwd, right, xRot).Normalize();
+    forward = RotateAroundAxis(fwd, right, xRot).Normalized();
 
-    up = Cross(right, forward).Normalize();
+    up = Cross(right, forward).Normalized();
 }

@@ -14,13 +14,14 @@
 // engine components
 #include <camera.hpp>
 #include <basic_objects.hpp>
+#include <meshes.hpp>
 
 class EndgenScene {
     public:
         EndgenScene(int w, int h, SDL_Renderer* rend, SDL_Texture* text);
         ~EndgenScene();
 
-        void Render();
+        void Render(bool exotic = false);
 
         // set starting position of Scene Camera
         // before Rendering Scene
@@ -40,7 +41,7 @@ class EndgenScene {
         SDL_Renderer* renderer;
         SDL_Texture* texture;
 
-        std::vector<Triangle> triangles;
+        std::vector<Mesh> objects;
         
         // buffer is used for drawing to the texture
         std::vector<Uint32> pixelBuffer;

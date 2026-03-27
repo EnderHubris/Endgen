@@ -33,8 +33,13 @@ TTF_Font* SDL_Helper::Create_Font( const char* font_path, int fontSize) {
 };
 //====================================================================
 
-EndgenEngine::EndgenEngine(int w, int h): WIDTH(w), HEIGHT(h) {
+EndgenEngine::EndgenEngine(int argc, char** argv, int w, int h): WIDTH(w), HEIGHT(h) {
     std::cout << "[*] Starting Engine. . ." << std::endl;
+
+    for (int i = 0; i < argc; ++i) {
+        if (std::string(argv[i]) == "--debug") { debug = true; }
+        if (std::string(argv[i]) == "--exotic-triangles") { exoticTriangles = true; }
+    }
 
     if (!Init()) {
         std::cerr << "[-] Engine Initialize failed" << std::endl;
@@ -144,8 +149,8 @@ void EndgenEngine::GetInput() {
 }
 
 void EndgenEngine::RenderScene() {
-    if (scene != nullptr)
-        scene->Render();
+    if (scene == nullptr) return;
+    scene->Render(exoticTriangles);
 }
 
 #include <chrono>
@@ -190,7 +195,10 @@ void EndgenEngine::Run() {
         RenderScene();
         auto ftime = std::chrono::high_resolution_clock::now();
         auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(ftime - stime);
-        std::cout << "[!] Render Time: " << dur.count() << "ms \n";
+
+        if (debug) {
+            std::cout << "[!] Render Time: " << dur.count() << "ms \n";
+        }
 
         bool sceneComponentsExist = scene->GetTexture() && scene->GetRenderer();
         // only write the pixels to the texture when the atomic signal is fired
